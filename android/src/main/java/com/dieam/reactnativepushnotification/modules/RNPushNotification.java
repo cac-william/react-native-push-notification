@@ -7,11 +7,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v4.app.NotificationManagerCompat;
 
 import com.dieam.reactnativepushnotification.helpers.ApplicationBadgeHelper;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
@@ -103,6 +108,43 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
                 manager.cancel(notificationID);
             }
         }, intentFilter);
+    }
+
+    @ReactMethod
+    public void checkNotificationPermission(Callback callback) {
+//        WritableMap params = Arguments.createMap();
+        boolean areEnabled = NotificationManagerCompat.from(getCurrentActivity()).areNotificationsEnabled();
+//        params.putBoolean("areNotificationsEnabled", areEnabled);
+        callback.invoke(areEnabled);
+    }
+
+    @ReactMethod
+    public void openNotificationSettings() {
+        Intent intent = new Intent();
+        Activity activity = getCurrentActivity();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setData(Uri.parse("package:" + activity.getPackageName()));
+        } else {
+            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+            intent.putExtra("app_package", activity.getPackageName());
+            intent.putExtra("app_uid", activity.getApplicationInfo().uid);
+
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+            }
+        }
+
+        activity.startActivity(intent);
+    }
+
+    @ReactMethod
+    public void openAppSettings() {
+        Activity activity = getCurrentActivity();
+        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+        activity.startActivity(intent);
     }
 
     @ReactMethod

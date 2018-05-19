@@ -1,6 +1,5 @@
 package com.dieam.reactnativepushnotification.modules;
 
-
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -43,15 +42,22 @@ public class RNPushNotificationHelper {
 
     public RNPushNotificationHelper(Application context) {
         this.context = context;
-        this.scheduledNotificationsPersistence = context.getSharedPreferences(RNPushNotificationHelper.PREFERENCES_KEY, Context.MODE_PRIVATE);
+        this.scheduledNotificationsPersistence = context.getSharedPreferences(RNPushNotificationHelper.PREFERENCES_KEY,
+                Context.MODE_PRIVATE);
     }
 
     public Class getMainActivityClass() {
-        String packageName = context.getPackageName();
-        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-        String className = launchIntent.getComponent().getClassName();
+//        String packageName = context.getPackageName();
+//        Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+//        String className = launchIntent.getComponent().getClassName();
+//        try {
+//            return Class.forName(className);
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
         try {
-            return Class.forName(className);
+            return Class.forName("com.m104.rn.ResumeConsultingEntryActivity");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;
@@ -69,7 +75,8 @@ public class RNPushNotificationHelper {
         notificationIntent.putExtra(RNPushNotificationPublisher.NOTIFICATION_ID, notificationID);
         notificationIntent.putExtras(bundle);
 
-        return PendingIntent.getBroadcast(context, notificationID, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, notificationID, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void sendNotificationScheduled(Bundle bundle) {
@@ -119,8 +126,8 @@ public class RNPushNotificationHelper {
         // notification to the user
         PendingIntent pendingIntent = toScheduleNotificationIntent(bundle);
 
-        Log.d(LOG_TAG, String.format("Setting a notification with id %s at time %s",
-                bundle.getString("id"), Long.toString(fireDate)));
+        Log.d(LOG_TAG, String.format("Setting a notification with id %s at time %s", bundle.getString("id"),
+                Long.toString(fireDate)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getAlarmManager().setExact(AlarmManager.RTC_WAKEUP, fireDate, pendingIntent);
         } else {
@@ -157,12 +164,9 @@ public class RNPushNotificationHelper {
                 title = context.getPackageManager().getApplicationLabel(appInfo).toString();
             }
 
-            NotificationCompat.Builder notification = new NotificationCompat.Builder(context)
-                    .setContentTitle(title)
-                    .setTicker(bundle.getString("ticker"))
-                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(bundle.getBoolean("autoCancel", true));
+            NotificationCompat.Builder notification = new NotificationCompat.Builder(context).setContentTitle(title)
+                    .setTicker(bundle.getString("ticker")).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(bundle.getBoolean("autoCancel", true));
 
             String group = bundle.getString("group");
             if (group != null) {
@@ -204,9 +208,9 @@ public class RNPushNotificationHelper {
             }
 
             if (largeIcon != null) {
-                largeIconResId = res.getIdentifier(largeIcon, "mipmap", packageName);
+                largeIconResId = res.getIdentifier(largeIcon, "drawable", packageName);
             } else {
-                largeIconResId = res.getIdentifier("ic_launcher", "mipmap", packageName);
+                largeIconResId = res.getIdentifier("ic_launcher", "drawable", packageName);
             }
 
             Bitmap largeIconBitmap = BitmapFactory.decodeResource(res, largeIconResId);
@@ -276,7 +280,8 @@ public class RNPushNotificationHelper {
             notification.setContentIntent(pendingIntent);
 
             if (!bundle.containsKey("vibrate") || bundle.getBoolean("vibrate")) {
-                long vibration = bundle.containsKey("vibration") ? (long) bundle.getDouble("vibration") : DEFAULT_VIBRATION;
+                long vibration = bundle.containsKey("vibration") ? (long) bundle.getDouble("vibration")
+                        : DEFAULT_VIBRATION;
                 if (vibration == 0)
                     vibration = DEFAULT_VIBRATION;
                 notification.setVibrate(new long[]{0, vibration});
@@ -308,8 +313,8 @@ public class RNPushNotificationHelper {
                     // Add "action" for later identifying which button gets pressed.
                     bundle.putString("action", action);
                     actionIntent.putExtra("notification", bundle);
-                    PendingIntent pendingActionIntent = PendingIntent.getBroadcast(context, notificationID, actionIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    PendingIntent pendingActionIntent = PendingIntent.getBroadcast(context, notificationID,
+                            actionIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                     notification.addAction(icon, action, pendingActionIntent);
                 }
             }
@@ -336,6 +341,7 @@ public class RNPushNotificationHelper {
                 notificationManager.notify(tag, notificationID, info);
             } else {
                 notificationManager.notify(notificationID, info);
+
             }
 
             // Can't use setRepeating for recurring notifications because setRepeating
@@ -364,8 +370,7 @@ public class RNPushNotificationHelper {
             }
 
             if ("time".equals(repeatType) && repeatTime <= 0) {
-                Log.w(LOG_TAG, "repeatType specified as time but no repeatTime " +
-                        "has been mentioned");
+                Log.w(LOG_TAG, "repeatType specified as time but no repeatTime " + "has been mentioned");
                 return;
             }
 
@@ -391,8 +396,8 @@ public class RNPushNotificationHelper {
 
             // Sanity check, should never happen
             if (newFireDate != 0) {
-                Log.d(LOG_TAG, String.format("Repeating notification with id %s at time %s",
-                        bundle.getString("id"), Long.toString(newFireDate)));
+                Log.d(LOG_TAG, String.format("Repeating notification with id %s at time %s", bundle.getString("id"),
+                        Long.toString(newFireDate)));
                 bundle.putDouble("fireDate", newFireDate);
                 this.sendNotificationScheduled(bundle);
             }
@@ -410,22 +415,38 @@ public class RNPushNotificationHelper {
         Log.i(LOG_TAG, "Cancelling all notifications");
 
         for (String id : scheduledNotificationsPersistence.getAll().keySet()) {
+            Log.i(LOG_TAG, "ALL scheduledNotificationsPersistence ID: " + id);
             cancelScheduledNotification(id);
         }
     }
 
     public void cancelScheduledNotification(ReadableMap userInfo) {
+        Log.i(LOG_TAG, "userInfo: " + userInfo.toString() + ", id: " + userInfo.getString("id") + ", mapSize: " + scheduledNotificationsPersistence.getAll().size());
+        boolean hasCancelled = false;
         for (String id : scheduledNotificationsPersistence.getAll().keySet()) {
+            Log.i(LOG_TAG, "ONE scheduledNotificationsPersistence ID: " + id);
             try {
                 String notificationAttributesJson = scheduledNotificationsPersistence.getString(id, null);
                 if (notificationAttributesJson != null) {
                     RNPushNotificationAttributes notificationAttributes = fromJson(notificationAttributesJson);
-                    if (notificationAttributes.matches(userInfo)) {
+                    Log.i(LOG_TAG, "notificationAttributes: " + notificationAttributes.toString() + ", userInfo.id: " + userInfo.getString("id") + ", getId(): " + notificationAttributes.getId());
+                    //if (notificationAttributes.matches(userInfo)) {
+                    if (notificationAttributes.getId().equals(userInfo.getString("id"))) {
                         cancelScheduledNotification(id);
+                        hasCancelled = true;
                     }
                 }
             } catch (JSONException e) {
                 Log.w(LOG_TAG, "Problem dealing with scheduled notification " + id, e);
+            }
+        }
+        if(!hasCancelled) {
+            try {
+                Log.i(LOG_TAG, "has not schedule cancelled ID: " + Integer.parseInt(userInfo.getString("id")));
+                notificationManager().cancel(Integer.parseInt(userInfo.getString("id")));
+            }
+            catch(NumberFormatException e) {
+                Log.w(LOG_TAG, "Notification ID invalid " + userInfo.getString("id"), e);
             }
         }
     }

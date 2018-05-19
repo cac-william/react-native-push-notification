@@ -31,14 +31,34 @@ var Notifications = {
 
 Notifications.callNative = function(name: String, params: Array) {
 	if ( typeof this.handler[name] === 'function' ) {
-		if ( typeof params !== 'array' &&
-			 typeof params !== 'object' ) {
+    if (typeof params !== 'array' && typeof params !== 'object') {
 			params = [];
 		}
 
 		return this.handler[name](...params);
 	} else {
 		return null;
+  }
+};
+
+Notifications.checkNotificationPermission = function(handler: Function) {
+  if (Platform.OS === 'android') {
+    this.handler.checkNotificationPermission(handler);
+  }
+  else {
+    return this.callNative('checkPermissions', arguments);
+  }
+};
+
+Notifications.openNotificationSettings = function() {
+  if (Platform.OS === 'android') {
+    this.handler.openNotificationSettings();
+  }
+};
+
+Notifications.openAppSettings = function() {
+  if (Platform.OS === 'android') {
+    this.handler.openAppSettings();
 	}
 };
 
@@ -82,19 +102,32 @@ Notifications.configure = function(options: Object) {
 		this._onRemoteFetch = this._onRemoteFetch.bind(this);
 		this.callNative( 'addEventListener', [ 'register', this._onRegister ] );
 		this.callNative( 'addEventListener', [ 'notification', this._onNotification ] );
-		this.callNative( 'addEventListener', [ 'localNotification', this._onNotification ] );
-		Platform.OS === 'android' ? this.callNative( 'addEventListener', [ 'remoteFetch', this._onRemoteFetch ] ) : null
+		this.callNative( 'addEventListener', [ 
+      'localNotification',
+      this._onNotification
+    ]);
+    Platform.OS === 'android'
+      ? this.callNative('addEventListener', [
+          'remoteFetch',
+          this._onRemoteFetch
+        ])
+      : null;
 
 		this.isLoaded = true;
 	}
 
-	if ( this.hasPoppedInitialNotification === false &&
-			( options.popInitialNotification === undefined || options.popInitialNotification === true ) ) {
-		this.popInitialNotification(function(firstNotification) {
+  if (
+    this.hasPoppedInitialNotification === false &&
+    (options.popInitialNotification === undefined ||
+      options.popInitialNotification === true)
+  ) {
+    this.popInitialNotification(
+      function(firstNotification) {
 			if ( firstNotification !== null ) {
 				this._onNotification(firstNotification, true);
 			}
-		}.bind(this));
+      }.bind(this)
+    );
 		this.hasPoppedInitialNotification = true;
 	}
 
@@ -106,10 +139,21 @@ Notifications.configure = function(options: Object) {
 
 /* Unregister */
 Notifications.unregister = function() {
-	this.callNative( 'removeEventListener', [ 'register', this._onRegister ] )
-	this.callNative( 'removeEventListener', [ 'notification', this._onNotification ] )
-	this.callNative( 'removeEventListener', [ 'localNotification', this._onNotification ] )
-	Platform.OS === 'android' ? this.callNative( 'removeEventListener', [ 'remoteFetch', this._onRemoteFetch ] ) : null
+  this.callNative('removeEventListener', ['register', this._onRegister]);
+  this.callNative('removeEventListener', [
+    'notification',
+    this._onNotification
+  ]);
+  this.callNative('removeEventListener', [
+    'localNotification',
+    this._onNotification
+  ]);
+  Platform.OS === 'android'
+    ? this.callNative('removeEventListener', [
+        'remoteFetch',
+        this._onRemoteFetch
+      ])
+    : null;
 	this.isLoaded = false;
 };
 
@@ -202,16 +246,14 @@ Notifications._onRegister = function(token: String) {
 
 Notifications._onRemoteFetch = function(notificationData: Object) {
 	if ( this.onRemoteFetch !== false ) {
-		this.onRemoteFetch(notificationData)
+    this.onRemoteFetch(notificationData);
 	}
 };
 
 Notifications._onNotification = function(data, isFromBackground = null) {
 	if ( isFromBackground === null ) {
-		isFromBackground = (
-			data.foreground === false ||
-			AppState.currentState === 'background'
-		);
+    isFromBackground =
+      data.foreground === false || AppState.currentState === 'background';
 	}
 
 	if ( this.onNotification !== false ) {
@@ -224,7 +266,7 @@ Notifications._onNotification = function(data, isFromBackground = null) {
 				badge: data.getBadgeCount(),
 				alert: data.getAlert(),
 				sound: data.getSound(),
-  			finish: (res) => data.finish(res)
+        finish: res => data.finish(res)
 			});
 		} else {
 			var notificationData = {
@@ -314,12 +356,12 @@ Notifications.checkPermissions = function() {
 };
 
 Notifications.registerNotificationActions = function() {
-	return this.callNative('registerNotificationActions', arguments)
-}
+  return this.callNative('registerNotificationActions', arguments);
+};
 
 Notifications.clearAllNotifications = function() {
 	// Only available for Android
-	return this.callNative('clearAllNotifications', arguments)
-}
+  return this.callNative('clearAllNotifications', arguments);
+};
 
 module.exports = Notifications;
